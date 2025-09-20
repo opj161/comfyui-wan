@@ -13,19 +13,19 @@ else
     echo "additional_params.sh not found in /workspace. Skipping..."
 fi
 
-if ! which aria2 > /dev/null 2>&1; then
-    echo "Installing aria2..."
-    apt-get update && apt-get install -y aria2
-else
-    echo "aria2 is already installed"
-fi
+# Check for and install required system packages if they are missing
+REQUIRED_PACKAGES="aria2 curl zip"
+for pkg in $REQUIRED_PACKAGES; do
+    if ! which $pkg > /dev/null 2>&1; then
+        echo "Installing $pkg..."
+        apt-get update && apt-get install -y $pkg
+    else
+        echo "$pkg is already installed."
+    fi
+done
 
-if ! which curl > /dev/null 2>&1; then
-    echo "Installing curl..."
-    apt-get update && apt-get install -y curl
-else
-    echo "curl is already installed"
-fi
+echo "INFO: Upgrading the ComfyUI frontend package..."
+pip install comfyui-frontend-package --upgrade
 
 # Set the network volume path
 NETWORK_VOLUME="/workspace"
@@ -194,15 +194,9 @@ fi
 if [ "$download_wan22" == "true" ]; then
   echo "Downloading Wan 2.2"
 
-  download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_t2v_high_noise_14B_fp16.safetensors" "$DIFFUSION_MODELS_DIR/wan2.2_t2v_high_noise_14B_fp16.safetensors"
-
-  download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_t2v_low_noise_14B_fp16.safetensors" "$DIFFUSION_MODELS_DIR/wan2.2_t2v_low_noise_14B_fp16.safetensors"
-
   download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp16.safetensors" "$DIFFUSION_MODELS_DIR/wan2.2_i2v_high_noise_14B_fp16.safetensors"
 
   download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp16.safetensors" "$DIFFUSION_MODELS_DIR/wan2.2_i2v_low_noise_14B_fp16.safetensors"
-
-  download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors" "$DIFFUSION_MODELS_DIR/wan2.2_ti2v_5B_fp16.safetensors"
 
   download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan2.2_vae.safetensors" "$VAE_DIR/wan2.2_vae.safetensors"
   
@@ -264,6 +258,26 @@ echo "Downloading VAE..."
 download_model "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1_VAE_bf16.safetensors" "$VAE_DIR/Wan2_1_VAE_bf16.safetensors"
 
 download_model "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors" "$VAE_DIR/wan_2.1_vae.safetensors"
+
+# --- Custom Model Downloads (jay2323/opj161) ---
+echo "INFO: Starting custom model downloads..."
+
+# --- LoRA Models ---
+echo "INFO: Downloading custom LoRA models..."
+download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors" "$LORAS_DIR/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors"
+download_model "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors" "$LORAS_DIR/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors"
+download_model "https://huggingface.co/jayr23/Flat-chest-V1/resolve/main/Flat%20chest%20V1.safetensors" "$LORAS_DIR/Flat chest V1.safetensors"
+download_model "https://huggingface.co/killprompt/instagirl_v2.5_by_Instara/resolve/main/Instagirlv2.5-HIGH.safetensors" "$LORAS_DIR/Instagirlv2.5-HIGH.safetensors"
+download_model "https://huggingface.co/killprompt/instagirl_v2.5_by_Instara/resolve/main/Instagirlv2.5-LOW.safetensors" "$LORAS_DIR/Instagirlv2.5-LOW.safetensors"
+download_model "https://huggingface.co/Instara/instareal-wan-2.2/resolve/main/Instareal_high.safetensors" "$LORAS_DIR/Instareal_high.safetensors"
+download_model "https://huggingface.co/Instara/instareal-wan-2.2/resolve/main/Instareal_low.safetensors" "$LORAS_DIR/Instareal_low.safetensors"
+
+# --- Text Encoder Model ---
+echo "INFO: Downloading custom Text Encoder model..."
+download_model "https://huggingface.co/NSFW-API/NSFW-Wan-UMT5-XXL/resolve/main/nsfw_wan_umt5-xxl_fp8_scaled.safetensors" "$TEXT_ENCODERS_DIR/nsfw_wan_umt5-xxl_fp8_scaled.safetensors"
+
+echo "✅ All custom downloads scheduled!"
+# --- End of Custom Model Downloads ---
 
 # Keep checking until no aria2c processes are running
 while pgrep -x "aria2c" > /dev/null; do
